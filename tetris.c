@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 #include <emscripten/emscripten.h>
+
 #define BOARD_WIDTH 10
 #define BOARD_HEIGHT 20
 #define BLOCK_SIZE 30
@@ -12,14 +13,14 @@ int board[BOARD_HEIGHT][BOARD_WIDTH] = {0};
 bool running = true;
 Uint32 last_tick = 0;
 Uint32 drop_interval = 500;
+
 typedef struct {
-    int x, y;       // pozycja lewego górnego pola klocka na planszy
+    int x, y;
     int shape[4][4];
 } Tetromino;
 
 Tetromino current_piece;
 
-// Definicja klocka I (bez rotacji)
 int I_shape[4][4] = {
     {0,0,0,0},
     {1,1,1,1},
@@ -28,14 +29,14 @@ int I_shape[4][4] = {
 };
 
 bool init() {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) return false;
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        return false;
+    }
 
-    window = SDL_CreateWindow("Mini Tetris", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                              BOARD_WIDTH * BLOCK_SIZE, BOARD_HEIGHT * BLOCK_SIZE, 0);
-    if (!window) return false;
-
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (!renderer) return false;
+    // Uproszczone tworzenie okna i renderera w jednym kroku
+    if (SDL_CreateWindowAndRenderer(BOARD_WIDTH * BLOCK_SIZE, BOARD_HEIGHT * BLOCK_SIZE, 0, &window, &renderer) < 0) {
+        return false;
+    }
 
     return true;
 }
@@ -49,8 +50,8 @@ void draw_block(int x, int y, SDL_Color color) {
 }
 
 bool can_move(int new_x, int new_y) {
-    for (int i=0; i<4; i++) {
-        for (int j=0; j<4; j++) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
             if (current_piece.shape[i][j]) {
                 int board_x = new_x + j;
                 int board_y = new_y + i;
@@ -64,8 +65,8 @@ bool can_move(int new_x, int new_y) {
 }
 
 void lock_piece() {
-    for (int i=0; i<4; i++) {
-        for (int j=0; j<4; j++) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
             if (current_piece.shape[i][j]) {
                 int x = current_piece.x + j;
                 int y = current_piece.y + i;
@@ -78,9 +79,9 @@ void lock_piece() {
 
 void spawn_piece() {
     current_piece.x = 3;
-    current_piece.y = -2;  // start powyżej planszy
-    for (int i=0; i<4; i++)
-        for (int j=0; j<4; j++)
+    current_piece.y = -2;
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
             current_piece.shape[i][j] = I_shape[i][j];
 }
 
@@ -94,24 +95,24 @@ void clear_lines() {
             }
         }
         if (full) {
-            // przesuwamy wszystko w dół
             for (int row = y; row > 0; row--) {
                 for (int col = 0; col < BOARD_WIDTH; col++) {
-                    board[row][col] = board[row-1][col];
+                    board[row][col] = board[row - 1][col];
                 }
             }
             for (int col = 0; col < BOARD_WIDTH; col++)
                 board[0][col] = 0;
-            y++; // sprawdź ponownie tę linię, bo się przesunęła
+            y++;
         }
     }
 }
+
 void game_loop() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) running = false;
         else if (event.type == SDL_KEYDOWN) {
-            switch(event.key.keysym.sym) {
+            switch (event.key.keysym.sym) {
                 case SDLK_LEFT:
                     if (can_move(current_piece.x - 1, current_piece.y))
                         current_piece.x--;
@@ -147,16 +148,16 @@ void game_loop() {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    for (int y=0; y<BOARD_HEIGHT; y++) {
-        for (int x=0; x<BOARD_WIDTH; x++) {
+    for (int y = 0; y < BOARD_HEIGHT; y++) {
+        for (int x = 0; x < BOARD_WIDTH; x++) {
             if (board[y][x]) {
                 draw_block(x, y, (SDL_Color){0, 255, 255, 255});
             }
         }
     }
 
-    for (int i=0; i<4; i++) {
-        for (int j=0; j<4; j++) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
             if (current_piece.shape[i][j]) {
                 int px = current_piece.x + j;
                 int py = current_piece.y + i;
@@ -168,6 +169,7 @@ void game_loop() {
 
     SDL_RenderPresent(renderer);
 }
+
 int main() {
     if (!init()) return 1;
 
