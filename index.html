@@ -123,7 +123,7 @@ canvas.emscripten { border: 0px none; background-color: black; }
     <div class="emscripten_border">
       <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
     </div>
- 
+    <textarea id="output" rows="8"></textarea>
 
     <script type='text/javascript'>
       var statusElement = document.getElementById('status');
@@ -196,19 +196,5 @@ canvas.emscripten { border: 0px none; background-color: black; }
       };
     </script>
     <script async type="text/javascript" src="index.js"></script>
-   <textarea id="output" rows="8"></textarea>
-<div style="position: absolute; bottom: 100px; left: 100px; z-index: 1000;">
-    <button onclick="simulateKey('ArrowLeft')">⬅️</button>
-    <button onclick="simulateKey('ArrowDown')">⬇️</button>
-    <button onclick="simulateKey('ArrowRight')">➡️</button>
-    <button onclick="simulateKey('ArrowUp')">🔄</button>
-</div>
-
-<script>
-function simulateKey(key) {
-    let e = new KeyboardEvent("keydown", { key });
-    window.dispatchEvent(e);
-}
-</script>
   </body>
 </html>
