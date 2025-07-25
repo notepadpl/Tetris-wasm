@@ -158,13 +158,15 @@ void game_loop() {
                 case SDLK_UP:
     rotate_piece();
     break;
+}
+        }
                 else if (e.type == SDL_MOUSEBUTTONDOWN) {
     int x = e.button.x;
     int y = e.button.y;
                 }
             }
-        }
-    }
+        
+    
 
     Uint32 now = SDL_GetTicks();
     if (now - last_tick > drop_interval) {
