@@ -44,7 +44,7 @@ bool init() {
     }
 
     // Uproszczone tworzenie okna i renderera w jednym kroku
-    if (SDL_CreateWindowAndRenderer(BOARD_WIDTH * BLOCK_SIZE, BOARD_HEIGHT * BLOCK_SIZE, 0, &window, &renderer) < 0) {
+    if (SDL_CreateWindowAndRenderer(WINDOW_WIDTH, WINDOW_HEIGHT, 0, &window, &renderer) < 0) {
         return false;
     }
 
