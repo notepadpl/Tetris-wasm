@@ -1,6 +1,6 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
-
+#include <emscripten/emscripten.h>
 #define BOARD_WIDTH 10
 #define BOARD_HEIGHT 20
 #define BLOCK_SIZE 30
@@ -9,7 +9,9 @@ SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 
 int board[BOARD_HEIGHT][BOARD_WIDTH] = {0};
-
+bool running = true;
+Uint32 last_tick = 0;
+Uint32 drop_interval = 500;
 typedef struct {
     int x, y;       // pozycja lewego górnego pola klocka na planszy
     int shape[4][4];
@@ -104,82 +106,74 @@ void clear_lines() {
         }
     }
 }
+void game_loop() {
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        if (event.type == SDL_QUIT) running = false;
+        else if (event.type == SDL_KEYDOWN) {
+            switch(event.key.keysym.sym) {
+                case SDLK_LEFT:
+                    if (can_move(current_piece.x - 1, current_piece.y))
+                        current_piece.x--;
+                    break;
+                case SDLK_RIGHT:
+                    if (can_move(current_piece.x + 1, current_piece.y))
+                        current_piece.x++;
+                    break;
+                case SDLK_DOWN:
+                    if (can_move(current_piece.x, current_piece.y + 1))
+                        current_piece.y++;
+                    break;
+            }
+        }
+    }
 
+    Uint32 now = SDL_GetTicks();
+    if (now - last_tick > drop_interval) {
+        if (can_move(current_piece.x, current_piece.y + 1)) {
+            current_piece.y++;
+        } else {
+            lock_piece();
+            clear_lines();
+            spawn_piece();
+            if (!can_move(current_piece.x, current_piece.y)) {
+                running = false;
+                emscripten_cancel_main_loop();
+            }
+        }
+        last_tick = now;
+    }
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
+    for (int y=0; y<BOARD_HEIGHT; y++) {
+        for (int x=0; x<BOARD_WIDTH; x++) {
+            if (board[y][x]) {
+                draw_block(x, y, (SDL_Color){0, 255, 255, 255});
+            }
+        }
+    }
+
+    for (int i=0; i<4; i++) {
+        for (int j=0; j<4; j++) {
+            if (current_piece.shape[i][j]) {
+                int px = current_piece.x + j;
+                int py = current_piece.y + i;
+                if (py >= 0)
+                    draw_block(px, py, (SDL_Color){255, 0, 0, 255});
+            }
+        }
+    }
+
+    SDL_RenderPresent(renderer);
+}
 int main() {
     if (!init()) return 1;
 
     spawn_piece();
+    last_tick = SDL_GetTicks();
 
-    bool running = true;
-    SDL_Event event;
-    Uint32 last_tick = SDL_GetTicks();
-    Uint32 drop_interval = 500; // ms
-
-    while (running) {
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) running = false;
-            else if (event.type == SDL_KEYDOWN) {
-                switch(event.key.keysym.sym) {
-                    case SDLK_LEFT:
-                        if (can_move(current_piece.x - 1, current_piece.y))
-                            current_piece.x--;
-                        break;
-                    case SDLK_RIGHT:
-                        if (can_move(current_piece.x + 1, current_piece.y))
-                            current_piece.x++;
-                        break;
-                    case SDLK_DOWN:
-                        if (can_move(current_piece.x, current_piece.y + 1))
-                            current_piece.y++;
-                        break;
-                }
-            }
-        }
-
-        Uint32 now = SDL_GetTicks();
-        if (now - last_tick > drop_interval) {
-            if (can_move(current_piece.x, current_piece.y + 1)) {
-                current_piece.y++;
-            } else {
-                lock_piece();
-                clear_lines();
-                spawn_piece();
-                // Jeśli nie można wstawić nowego klocka - koniec gry (tu prosto)
-                if (!can_move(current_piece.x, current_piece.y)) running = false;
-            }
-            last_tick = now;
-        }
-
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderClear(renderer);
-
-        // Rysuj planszę
-        for (int y=0; y<BOARD_HEIGHT; y++) {
-            for (int x=0; x<BOARD_WIDTH; x++) {
-                if (board[y][x]) {
-                    draw_block(x, y, (SDL_Color){0, 255, 255, 255});
-                }
-            }
-        }
-
-        // Rysuj klocek
-        for (int i=0; i<4; i++) {
-            for (int j=0; j<4; j++) {
-                if (current_piece.shape[i][j]) {
-                    int px = current_piece.x + j;
-                    int py = current_piece.y + i;
-                    if (py >= 0)
-                        draw_block(px, py, (SDL_Color){255, 0, 0, 255});
-                }
-            }
-        }
-
-        SDL_RenderPresent(renderer);
-        SDL_Delay(16);
-    }
-
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+    emscripten_set_main_loop(game_loop, 0, 1);
     return 0;
 }
