@@ -9,6 +9,10 @@
 #define DPAD_PADDING 20
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
+#define WINDOW_WIDTH 640
+#define WINDOW_HEIGHT 480
+#define GRID_SIZE 20
+SDL_Rect dpad_up, dpad_down, dpad_left, dpad_right;
 
 int board[BOARD_HEIGHT][BOARD_WIDTH] = {0};
 bool running = true;
