@@ -160,9 +160,9 @@ void game_loop() {
     break;
 }
         }
-                else if (e.type == SDL_MOUSEBUTTONDOWN) {
-    int x = e.button.x;
-    int y = e.button.y;
+                else if (event.type == SDL_MOUSEBUTTONDOWN) {
+    int x = event.button.x;
+    int y = event.button.y;
                 }
             }
         
