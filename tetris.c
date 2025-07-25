@@ -163,7 +163,21 @@ void game_loop() {
                 else if (event.type == SDL_MOUSEBUTTONDOWN) {
     int x = event.button.x;
     int y = event.button.y;
-                }
+
+    if (SDL_PointInRect(&(SDL_Point){x, y}, &dpad_left)) {
+        if (can_move(current_piece.x - 1, current_piece.y))
+            current_piece.x--;
+    } else if (SDL_PointInRect(&(SDL_Point){x, y}, &dpad_right)) {
+        if (can_move(current_piece.x + 1, current_piece.y))
+            current_piece.x++;
+    } else if (SDL_PointInRect(&(SDL_Point){x, y}, &dpad_down)) {
+        if (can_move(current_piece.x, current_piece.y + 1))
+            current_piece.y++;
+    } else if (SDL_PointInRect(&(SDL_Point){x, y}, &dpad_up)) {
+        rotate_piece();
+    }
+}
+
             }
         
     
