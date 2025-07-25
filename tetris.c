@@ -106,6 +106,20 @@ void clear_lines() {
         }
     }
 }
+void rotate_piece() {
+    int rotated[4][4] = {0};
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            rotated[j][3 - i] = current_piece.shape[i][j];
+
+    Tetromino test = current_piece;
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            test.shape[i][j] = rotated[i][j];
+
+    if (can_move(test.x, test.y))
+        current_piece = test;
+}
 
 void game_loop() {
     SDL_Event event;
@@ -125,6 +139,9 @@ void game_loop() {
                     if (can_move(current_piece.x, current_piece.y + 1))
                         current_piece.y++;
                     break;
+                case SDLK_UP:
+    rotate_piece();
+    break;
             }
         }
     }
