@@ -5,7 +5,8 @@
 #define BOARD_WIDTH 10
 #define BOARD_HEIGHT 20
 #define BLOCK_SIZE 30
-
+#define DPAD_SIZE 50
+#define DPAD_PADDING 20
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 
@@ -13,7 +14,12 @@ int board[BOARD_HEIGHT][BOARD_WIDTH] = {0};
 bool running = true;
 Uint32 last_tick = 0;
 Uint32 drop_interval = 500;
-
+void setup_dpad() {
+    dpad_up = (SDL_Rect){DPAD_PADDING + DPAD_SIZE, WINDOW_HEIGHT - 3 * DPAD_SIZE - DPAD_PADDING, DPAD_SIZE, DPAD_SIZE};
+    dpad_down = (SDL_Rect){DPAD_PADDING + DPAD_SIZE, WINDOW_HEIGHT - DPAD_SIZE - DPAD_PADDING, DPAD_SIZE, DPAD_SIZE};
+    dpad_left = (SDL_Rect){DPAD_PADDING, WINDOW_HEIGHT - 2 * DPAD_SIZE - DPAD_PADDING, DPAD_SIZE, DPAD_SIZE};
+    dpad_right = (SDL_Rect){DPAD_PADDING + 2 * DPAD_SIZE, WINDOW_HEIGHT - 2 * DPAD_SIZE - DPAD_PADDING, DPAD_SIZE, DPAD_SIZE};
+}
 typedef struct {
     int x, y;
     int shape[4][4];
@@ -40,7 +46,13 @@ bool init() {
 
     return true;
 }
-
+void render_dpad() {
+    SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
+    SDL_RenderFillRect(renderer, &dpad_up);
+    SDL_RenderFillRect(renderer, &dpad_down);
+    SDL_RenderFillRect(renderer, &dpad_left);
+    SDL_RenderFillRect(renderer, &dpad_right);
+}
 void draw_block(int x, int y, SDL_Color color) {
     SDL_Rect rect = { x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE };
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 255);
@@ -142,6 +154,10 @@ void game_loop() {
                 case SDLK_UP:
     rotate_piece();
     break;
+                else if (e.type == SDL_MOUSEBUTTONDOWN) {
+    int x = e.button.x;
+    int y = e.button.y;
+                }
             }
         }
     }
@@ -183,7 +199,7 @@ void game_loop() {
             }
         }
     }
-
+render_dpad();
     SDL_RenderPresent(renderer);
 }
 
@@ -191,6 +207,7 @@ int main() {
     if (!init()) return 1;
 
     spawn_piece();
+    setup_dpad();
     last_tick = SDL_GetTicks();
 
     emscripten_set_main_loop(game_loop, 0, 1);
