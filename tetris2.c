@@ -26,7 +26,7 @@ typedef struct {
 } Tetromino;
 
 Tetromino current_piece;
-
+Tetromino next_piece;
 int I_shape[4][4] = {
     {0,0,0,0},
     {1,1,1,1},
@@ -106,7 +106,25 @@ void render_dpad() {
     SDL_RenderFillRect(renderer, &dpad_left);
     SDL_RenderFillRect(renderer, &dpad_right);
 }
+void draw_next_piece() {
+    int preview_x = BOARD_WIDTH * BLOCK_SIZE + DPAD_PADDING + DPAD_SIZE; // środek
+    int preview_y = 50;  // wysoko nad d-padem
 
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            if (next_piece.shape[i][j]) {
+                SDL_Rect rect = {
+                    preview_x + j * (BLOCK_SIZE / 2),
+                    preview_y + i * (BLOCK_SIZE / 2),
+                    BLOCK_SIZE / 2,
+                    BLOCK_SIZE / 2
+                };
+                SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255); // żółty np.
+                SDL_RenderFillRect(renderer, &rect);
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+                SDL_RenderDrawRect(renderer, &rect);
+            }
+}
 void draw_block(int x, int y, SDL_Color color) {
     SDL_Rect rect = { x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE };
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 255);
@@ -139,21 +157,26 @@ void lock_piece() {
                     board[y][x] = 1;
             }
 }
-
-void spawn_piece() {
-    current_piece.x = 3;
-    current_piece.y = -2;
+Tetromino generate_random_piece() {
+    Tetromino piece;
+    piece.x = 3;
+    piece.y = -2;
 
     int type = rand() % 7;
     switch (type) {
-        case 0: copy_shape(current_piece.shape, I_shape); break;
-        case 1: copy_shape(current_piece.shape, O_shape); break;
-        case 2: copy_shape(current_piece.shape, T_shape); break;
-        case 3: copy_shape(current_piece.shape, L_shape); break;
-        case 4: copy_shape(current_piece.shape, J_shape); break;
-        case 5: copy_shape(current_piece.shape, S_shape); break;
-        case 6: copy_shape(current_piece.shape, Z_shape); break;
+        case 0: copy_shape(piece.shape, I_shape); break;
+        case 1: copy_shape(piece.shape, O_shape); break;
+        case 2: copy_shape(piece.shape, T_shape); break;
+        case 3: copy_shape(piece.shape, L_shape); break;
+        case 4: copy_shape(piece.shape, J_shape); break;
+        case 5: copy_shape(piece.shape, S_shape); break;
+        case 6: copy_shape(piece.shape, Z_shape); break;
     }
+    return piece;
+}
+void spawn_piece() {
+    current_piece = next_piece;
+    next_piece = generate_random_piece();
 }
 void clear_lines() {
     for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
@@ -270,13 +293,15 @@ void game_loop() {
             }
 
     render_dpad();
+    draw_next_piece();
     SDL_RenderPresent(renderer);
 }
 
 int main() {
     if (!init()) return 1;
 
-    spawn_piece();
+    next_piece = generate_random_piece();
+spawn_piece();
     setup_dpad();
     last_tick = SDL_GetTicks();
 
