@@ -1,7 +1,7 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 #include <emscripten/emscripten.h>
-
+#include <stdlib.h>  // dla rand()
 #define BOARD_WIDTH 10
 #define BOARD_HEIGHT 20
 #define BLOCK_SIZE 30
@@ -33,7 +33,52 @@ int I_shape[4][4] = {
     {0,0,0,0},
     {0,0,0,0}
 };
+int O_shape[4][4] = {
+    {0,0,0,0},
+    {0,1,1,0},
+    {0,1,1,0},
+    {0,0,0,0}
+};
 
+int T_shape[4][4] = {
+    {0,0,0,0},
+    {1,1,1,0},
+    {0,1,0,0},
+    {0,0,0,0}
+};
+
+int L_shape[4][4] = {
+    {0,0,0,0},
+    {1,1,1,0},
+    {1,0,0,0},
+    {0,0,0,0}
+};
+
+int J_shape[4][4] = {
+    {0,0,0,0},
+    {1,1,1,0},
+    {0,0,1,0},
+    {0,0,0,0}
+};
+
+int S_shape[4][4] = {
+    {0,0,0,0},
+    {0,1,1,0},
+    {1,1,0,0},
+    {0,0,0,0}
+};
+
+int Z_shape[4][4] = {
+    {0,0,0,0},
+    {1,1,0,0},
+    {0,1,1,0},
+    {0,0,0,0}
+};
+void copy_shape(int dest[4][4], int src[4][4]) {
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            dest[i][j] = src[i][j];
+}
 bool init() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
         return false;
@@ -98,11 +143,18 @@ void lock_piece() {
 void spawn_piece() {
     current_piece.x = 3;
     current_piece.y = -2;
-    for (int i = 0; i < 4; i++)
-        for (int j = 0; j < 4; j++)
-            current_piece.shape[i][j] = I_shape[i][j];
-}
 
+    int type = rand() % 7;
+    switch (type) {
+        case 0: copy_shape(current_piece.shape, I_shape); break;
+        case 1: copy_shape(current_piece.shape, O_shape); break;
+        case 2: copy_shape(current_piece.shape, T_shape); break;
+        case 3: copy_shape(current_piece.shape, L_shape); break;
+        case 4: copy_shape(current_piece.shape, J_shape); break;
+        case 5: copy_shape(current_piece.shape, S_shape); break;
+        case 6: copy_shape(current_piece.shape, Z_shape); break;
+    }
+}
 void clear_lines() {
     for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
         bool full = true;
