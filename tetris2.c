@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
+#include <SDL2/SDL_ttf.h>
 #include <emscripten/emscripten.h>
 #include <stdlib.h>  // dla rand()
 #define BOARD_WIDTH 10
@@ -19,7 +20,7 @@ int board[BOARD_HEIGHT][BOARD_WIDTH] = {0};
 bool running = true;
 Uint32 last_tick = 0;
 Uint32 drop_interval = 500;
-
+int score = 0;
 typedef struct {
     int x, y;
     int shape[4][4];
@@ -79,7 +80,18 @@ void copy_shape(int dest[4][4], int src[4][4]) {
         for (int j = 0; j < 4; j++)
             dest[i][j] = src[i][j];
 }
+void render_text(const char* text, int x, int y, SDL_Color color, TTF_Font* font) {
+    SDL_Surface* surface = TTF_RenderText_Blended(font, text, color);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_Rect dst = { x, y, surface->w, surface->h };
+    SDL_RenderCopy(renderer, texture, NULL, &dst);
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
+}
 bool init() {
+    if (TTF_Init() < 0) {
+    return false;
+}
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
         return false;
 
@@ -194,6 +206,8 @@ void clear_lines() {
             for (int col = 0; col < BOARD_WIDTH; col++)
                 board[0][col] = 0;
             y++;  // recheck same row
+    
+    score += 100;
         }
     }
 }
@@ -294,17 +308,24 @@ void game_loop() {
 
     render_dpad();
     draw_next_piece();
+    char buffer[32];
+sprintf(buffer, "Score: %d", score);
+render_text(buffer, BOARD_WIDTH * BLOCK_SIZE + DPAD_PADDING, 10, (SDL_Color){255, 255, 255, 255}, font);
     SDL_RenderPresent(renderer);
 }
 
 int main() {
     if (!init()) return 1;
-
+TTF_Font* font = TTF_OpenFont("assets/fast99.ttf", 24);  // musisz mieć ten plik obok
+if (!font) {
+    return 1;
+}
     next_piece = generate_random_piece();
 spawn_piece();
     setup_dpad();
     last_tick = SDL_GetTicks();
 
     emscripten_set_main_loop(game_loop, 0, 1);
+    TTF_Quit();
 return 0;
 }
