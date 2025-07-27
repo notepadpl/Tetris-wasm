@@ -15,6 +15,7 @@
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 SDL_Rect dpad_up, dpad_down, dpad_left, dpad_right;
+TTF_Font* font = NULL;
 
 int board[BOARD_HEIGHT][BOARD_WIDTH] = {0};
 bool running = true;
