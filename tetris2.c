@@ -317,7 +317,7 @@ render_text(buffer, BOARD_WIDTH * BLOCK_SIZE + DPAD_PADDING, 10, (SDL_Color){255
 
 int main() {
     if (!init()) return 1;
-TTF_Font* font = TTF_OpenFont("assets/fast99.ttf", 24);  // musisz mieć ten plik obok
+font = TTF_OpenFont("assets/fast99.ttf", 24);  // musisz mieć ten plik obok
 if (!font) {
     return 1;
 }
